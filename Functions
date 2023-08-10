@@ -1,0 +1,34 @@
+#! /usr/bin/bash
+
+# Declare Advanced Regex
+shopt -s extglob
+
+# check names to contain only alpha characters
+check_name () {
+if [[ $1 =~ ^[a-zA-Z]+$ ]]; then
+  echo 0
+else
+  echo 1
+fi
+}
+#read x
+#test_name=$(check_name "$x")
+
+#check value is not null
+not_null () {
+if [ ! -z "$1" ]; then
+  echo 0
+else
+  echo 1
+fi
+}
+#test_result=$(not_null "$x")
+
+# check value is only numbers
+only_numbers (){
+if [[ $1 =~ ^[0-9]+$ ]]; then
+  echo 0
+else
+  echo 1
+fi
+}
