@@ -57,7 +57,33 @@ case $entry in
                         echo "DataBase Does Not Exists!! Did You Enter name Correctly: ;"; continue
                 else
                         echo "...........Connecting you to DataBase $dbn2 ............"
-                        cd "$dbn2"; break;;
+                        cd "$dbn2"
+                        # Start Table Menu 
+                        while true; do
+echo -ne "
+What Do you want to DO?
+$(Red '1) Create Table') 
+$(Red '2) Insert into Table')
+$(Red '3) List Tables')
+$(Red '4) Drop Table')
+$(Red '5) Select From Table')
+$(Red '6) Delete Table')
+$(Red '7) Update Table')
+$(Red '8) Exit')
+$(RedB 'Choose an option:')
+"
+                                read table
+                                case $table in
+                                        # Create Table Option
+                                        1) source ../../CreateTable; break;;
+                                        2) source ../../InsertTable; break;;
+                                        7) source ../../UpdateTable; break;;
+
+                                esac
+                        done
+                        break
+                fi
+        done; break;;
         # List Databases Option
         3) cd ./BASHDBS
         echo -ne "$(ls -d */ | sed 's#/##') \n"
