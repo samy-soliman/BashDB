@@ -1,0 +1,92 @@
+#! /bin/bash
+# trap term signals
+trap '' 2
+# Import Color Functions
+source ./ColorsFuncs
+# Import Utility Functions
+source ./Functions
+# Welcome message here
+cat ./Welcome
+# Initialization of Database
+if [ ! -d "BASHDBS" ]; then
+  echo ".............Initializing............."
+  mkdir "BASHDBS"
+fi
+# Breif message here
+
+# manage databases menu
+entry_menu(){
+while true; do
+echo -ne "
+What Do you want to DO?
+$(Red '1) Create DataBase') 
+$(Red '2) Connect DataBase')
+$(Red '3) List DataBases')
+$(Red '4) Drop DataBases')
+$(Red '5) Exit')
+$(RedB 'Choose an option:')
+"
+read entry
+case $entry in
+        # Create Database Option
+        1) cd ./BASHDBS;
+	while true; do
+                echo "Enter Your New DataBase Name: ";
+                read dbn;
+                test_dbn=$(check_name "$dbn")
+                if [ $test_dbn -eq "1" ]; then
+                        echo "Naming Error please Enter only English Alphapet"; continue
+                elif [ -d "$dbn" ]; then
+                        echo "DataBase Already Exists , Enter a new Name;"; continue
+                else
+                        echo "...........Creating you DataBase ............"
+                        mkdir "$dbn"
+                        break
+                fi
+        done
+        cd ../ ; break;;
+        # Connect to Database Option
+        2) cd ./BASHDBS
+        while true; do
+                echo "Enter Your DataBase Name: ";
+                read dbn2;
+                test_dbn=$(check_name "$dbn2")
+                if [ $test_dbn -eq "1" ]; then 
+                        echo "Naming Error please Enter only English Alphapet"; continue
+                elif [ ! -d "$dbn2" ]; then
+                        echo "DataBase Does Not Exists!! Did You Enter name Correctly: ;"; continue
+                else
+                        echo "...........Connecting you to DataBase $dbn2 ............"
+                        cd "$dbn2"; break;;
+        # List Databases Option
+        3) cd ./BASHDBS
+        echo -ne "$(ls -d */ | sed 's#/##') \n"
+        cd ../ ; break;;
+        # Delete Database Option
+        4) cd ./BASHDBS
+        while true; do
+                echo "Enter Your DataBase Name: ";
+                read dbn3;
+                test_dbn=$(check_name "$dbn3")
+                if [ $test_dbn -eq "1" ]; then
+                        echo "Naming Error please Enter only English Alphapet"; continue
+                elif [ ! -d "$dbn3" ]; then
+                        echo "DataBase Does Not Exists!! Did You Enter name Correctly: ;"; continue
+                else
+                        echo "...........Droping Your DataBase $dbn3 ............"
+                        rm -r "$dbn3"
+                        break
+                fi
+        done
+        cd ../ ; break;;
+        # Exit Database Option
+        5) break;;
+        *) echo -ne "$(RedB "Ooops - unknown choice $a")"; continue;
+esac
+done
+}
+
+# Call Entry Menu Function
+entry_menu
+# End Trapping 
+trap 2
