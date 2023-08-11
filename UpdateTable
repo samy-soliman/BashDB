@@ -17,10 +17,8 @@ done
 # get the number of columns in table
 columns_number=$(awk -F: '{ print NF; exit }' $update_table.meta)
 #echo "you table colnum is $columns_number"
-
 # get the columns names
 columns_names=($(awk -F ':' 'NR==1 {for (i=1; i<=NF; i++) print $i}' $update_table.meta))
-
 # Populate the column_types array to check constrains 
 column_types=($(awk -F: 'NR==2{
     for(i=1; i<=NF; i++) {
@@ -31,7 +29,6 @@ column_types=($(awk -F: 'NR==2{
     }
     exit
 }' $update_table.meta))
-
 # Populate the Primary_columns array to fetch the pk_columns from table 
 primary_columns=($(awk -F: 'NR==2 {
     for (i=1; i <= NF; i++) {
@@ -42,11 +39,10 @@ primary_columns=($(awk -F: 'NR==2 {
     exit
 }' "$update_table.meta"))
 
+
 # take the columns the user want to update based on
 # define an array for users select columns
-
 update_columns_names=()
-
 while true; do
         echo "Enter The Number of Columns you want to Update based on"
         read user_columns_number
@@ -79,12 +75,10 @@ while true; do
         fi
         break
 done
-
 #echo "${update_columns_names[@]}"
 
 # get the update columns meta data
 # Populate the column_types array to check constrains 
-
 # Convert the Bash array to a comma-separated string
 update_columns_names_string=$(IFS=,; echo "${update_columns_names[*]}")
 # Use the converted string in the AWK script
@@ -130,7 +124,6 @@ update_column_types=($(awk -F: -v update_cols_num="$update_column_number_string"
 
 # loop and take user input for each column, check its data type
 update_row=()
-
 for ((i = 1; i <= $user_columns_number ; i++)); do
         while true; do         
                 read -p "Enter ${update_columns_names[$((i - 1))]} column its datatype is ${update_column_types[$((i - 1))]} : " v
@@ -150,15 +143,13 @@ for ((i = 1; i <= $user_columns_number ; i++)); do
         break
         done
 done
-echo "row update values ${update_row[@]}"
-echo "num string ${update_column_number_string[@]}"
-
+#echo "row update values ${update_row[@]}"
+#echo "num string ${update_column_number_string[@]}"
 
 # check if record exists or not
 # does not exists , give error that there is not match to update
 update_row_string=$(IFS=,; echo "${update_row[*]}")
-echo "row update string ${update_row_string[@]}"
-
+#echo "row update string ${update_row_string[@]}"
 update_row_match=($(awk -F: -v update_cols_num="$update_column_number_string" -v update_row_col="$update_row_string" '
     BEGIN {
         split(update_cols_num, update_cols_num_array, ",");
@@ -185,15 +176,159 @@ echo "update row match ${update_row_match[@]}"
 if (( ${#update_row_match[@]} == 0 )); then
     echo "NO Match found Ensure you Entered right data"
 else
-    echo "Match found"
+    echo "........Match found in Your Records.........."
+    # start the proccess of user entering his data
+    # you can think of this step as the values set by the UPDATE clause in sql and the previous part was the WHERE clause
+    update_columns_names_set=()
+    while true; do
+            echo "Enter The Number of Columns you want to Update based on your chosen columns"
+            read user_columns_number_set
+            test_columns_number=$(only_numbers "$user_columns_number_set")
+            if [ $test_columns_number -eq "0" ] && [ "$user_columns_number_set" -gt "0" ] && [ "$user_columns_number_set" -le "$columns_number" ]; then
+                    for i in $(seq 1 $user_columns_number);
+                    do
+                            while true; do 
+                            echo "Enter name from Your columns name"
+                            echo "${columns_names[@]}"
+                            read -p "Enter $i column name " v
+                            x=$v
+                            # check column exists
+                            result_inarray=$(in_array "$v" "${columns_names[@]}")
+                            if [ "$result_inarray" -eq "0" ]; then
+                                    if [ $(check_name "$x") -eq "0" ]; then
+                                            update_columns_names_set+=("$x")
+                                            break
+                                    fi
+                            else
+                                    echo "Wrong Input Please Try again."
+                                    continue
+                            fi
+                            break
+                            done
+                    done
+            else
+                    echo "Error Number of columns Issue!! make sure it is positive and less than oe equals your original table columns"
+                    continue
+            fi
+            break
+    done
+    echo "You choose to enter data into ${update_columns_names_set[@]}"
+    # get columns metadata
+    # Convert the Bash array to a comma-separated string
+    update_columns_names_set_string=$(IFS=,; echo "${update_columns_names_set[*]}")
+    # Use the converted string in the AWK script
+    update_column_number_set=($(awk -F: -v update_cols="$update_columns_names_set_string" '
+        BEGIN {
+            n = split(update_cols, update_cols_array, ",");
+            for (i = 1; i <= n; i++) {
+                update_cols_lookup[update_cols_array[i]] = 1;
+            }
+        }
+        NR == 1 {
+            for (i = 1; i <= NF; i++) {
+                if ($i in update_cols_lookup) {
+                    printf "%d ", i;
+                }
+            }
+            exit;
+        } ' $update_table.meta))
+     echo "your updated columns ${update_column_number[@]}"
+
+    # Convert the Bash array to a comma-separated string
+    update_column_number_set_string=$(IFS=,; echo "${update_column_number_set[*]}")
+    # get user specific columns datatybe
+    update_column_types_set=($(awk -F: -v update_cols_num="$update_column_number_set_string" '
+        BEGIN {
+            n = split(update_cols_num, update_cols_array, ",");
+            for (i = 1; i <= n; i++) {
+                update_cols_lookup[update_cols_array[i]] = 1;
+            }
+        }
+        NR == 2 {
+            for (i = 1; i <= NF; i++) {
+                if (i in update_cols_lookup) {
+                    if ($i % 2 == 0)
+                        printf "string ";
+                    else
+                        printf "integer ";
+                }
+            }
+            exit;
+        } ' $update_table.meta))
+     echo "Youe columns types ${update_column_types_set[@]}"
+    # end of finding columns metadata
+    # loop and take user input
+    update_row_set=()
+    for ((i = 1; i <= $user_columns_number_set ; i++)); do
+            while true; do         
+                    read -p "Enter ${update_columns_names_set[$((i - 1))]} column its datatype is ${update_column_types_set[$((i - 1))]} : " v
+                    # check inputs datatypes
+                    if [[ "${update_column_types_set[$((i - 1))]}" == "string" ]]; then
+                            if [ $(check_name "$v") -eq "1" ]; then
+                                    echo "Error wrong data Type"
+                                    continue
+                            fi
+                    elif [[ "${update_column_types_set[$((i - 1))]}" == "integer" ]]; then
+                            if [ $(only_numbers "$v") -eq "1" ]; then
+                                    echo "Error wrong data Type"
+                                    continue
+                            fi
+                    fi
+            update_row_set+=("$v")
+            break
+            done
+    done
+    echo "row update values ${update_row[@]}"
+    # check if there is no pk in the columns used in WHERE clause , if not we update the first match
+    result_pk=$(check_common_values update_column_number[@] primary_columns[@])
+    if [ "$result_pk" -eq 1 ]; then
+        echo "Common values exist"
+        # if there is part of the primary key in the WHERE clause we need to check if the full updated record
+        # compined with the primary key may break refencial integrity
+
+    else
+    # Using awk to extract the desired row and assign it to row_array
+    while true; do
+        echo "You have more than one row with this columns which one you want to update into"
+        index=1
+        for row_number in "${update_row_match[@]}"; do
+            row=$(sed -n "${row_number}p" "$update_table")
+            echo "$index: $row"
+            ((index++))
+        done
+        read r
+            # check inputs datatypes
+            if [ "$r" -gt "0" ] && [ "$r" -le "$index" ]; then
+                echo "You selected the row to update is $r"
+                chosen_row=${update_row_match[$((r - 1))]}
+                break
+
+            else
+                continue
+            fi
+    done
+    echo "your row to cut $chosen_row"
+    row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
+    echo "array string $row_string"
+
+    # Split the row_string into an array
+    IFS=':' read -ra row_array <<< "$row_string"
+    # Print the updated first_array
+    #for element in "${row_array[@]}"; do
+    #    echo "original $element"
+    #done
+    # update the array we extracted with the values we want
+    for ((i = 0; i < ${#update_column_number_set[@]}; i++)); do
+    index=$((update_column_number_set[i] - 1))
+    value="${update_row_set[i]}"
+    row_array[$index]="$value"
+    done
+    # now what is left is to concat the array to a string using colons
+    # then replace the line in the same place we fetched it from
+    echo ".................... Success Update......................."
+    updated_row_save=$(IFS=":"; echo "${row_array[*]}")
+    sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
+    fi
+
 
 fi
-
-# if exists a match for columns specified, get row number 
-# if it exists multiple times ?
-# make loop for user input to what to update in the recoed
-# make an comma sperated string to pass our array to awk
-
-
-# check referencial integirty
-
