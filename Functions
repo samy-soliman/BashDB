@@ -46,3 +46,20 @@ in_array() {
     done
     echo "1"  # Return "1" for failure (value not found)
 }
+
+# Function to check if common values exist in arrays
+check_common_values() {
+    local array1=("${!1}")  # Get values of the first array
+    local array2=("${!2}")  # Get values of the second array
+
+    for value1 in "${array1[@]}"; do
+        for value2 in "${array2[@]}"; do
+            if [ "$value1" == "$value2" ]; then
+                echo "1"
+                return
+            fi
+        done
+    done
+
+    echo "0"
+}
