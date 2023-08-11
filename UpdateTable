@@ -280,54 +280,54 @@ else
     done
     echo "row update values ${update_row[@]}"
     # check if there is no pk in the columns used in WHERE clause , if not we update the first match
-    result_pk=$(check_common_values update_column_number[@] primary_columns[@])
+    result_pk=$(check_common_values update_column_number_set[@] primary_columns[@])
     if [ "$result_pk" -eq 1 ]; then
         echo "Common values exist"
         # if there is part of the primary key in the WHERE clause we need to check if the full updated record
         # compined with the primary key may break refencial integrity
 
     else
-    # Using awk to extract the desired row and assign it to row_array
-    while true; do
-        echo "You have more than one row with this columns which one you want to update into"
-        index=1
-        for row_number in "${update_row_match[@]}"; do
-            row=$(sed -n "${row_number}p" "$update_table")
-            echo "$index: $row"
-            ((index++))
+        # Using awk to extract the desired row and assign it to row_array
+        while true; do
+            echo "You have more than one row with this columns which one you want to update into"
+            index=1
+            for row_number in "${update_row_match[@]}"; do
+                row=$(sed -n "${row_number}p" "$update_table")
+                echo "$index: $row"
+                ((index++))
+            done
+            read r
+                # check inputs datatypes
+                if [ "$r" -gt "0" ] && [ "$r" -le "$index" ]; then
+                    echo "You selected the row to update is $r"
+                    chosen_row=${update_row_match[$((r - 1))]}
+                    break
+
+                else
+                    continue
+                fi
         done
-        read r
-            # check inputs datatypes
-            if [ "$r" -gt "0" ] && [ "$r" -le "$index" ]; then
-                echo "You selected the row to update is $r"
-                chosen_row=${update_row_match[$((r - 1))]}
-                break
+        echo "your row to cut $chosen_row"
+        row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
+        echo "array string $row_string"
 
-            else
-                continue
-            fi
-    done
-    echo "your row to cut $chosen_row"
-    row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
-    echo "array string $row_string"
-
-    # Split the row_string into an array
-    IFS=':' read -ra row_array <<< "$row_string"
-    # Print the updated first_array
-    #for element in "${row_array[@]}"; do
-    #    echo "original $element"
-    #done
-    # update the array we extracted with the values we want
-    for ((i = 0; i < ${#update_column_number_set[@]}; i++)); do
-    index=$((update_column_number_set[i] - 1))
-    value="${update_row_set[i]}"
-    row_array[$index]="$value"
-    done
-    # now what is left is to concat the array to a string using colons
-    # then replace the line in the same place we fetched it from
-    echo ".................... Success Update......................."
-    updated_row_save=$(IFS=":"; echo "${row_array[*]}")
-    sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
+        # Split the row_string into an array
+        IFS=':' read -ra row_array <<< "$row_string"
+        # Print the updated first_array
+        #for element in "${row_array[@]}"; do
+        #    echo "original $element"
+        #done
+        # update the array we extracted with the values we want
+        for ((i = 0; i < ${#update_column_number_set[@]}; i++)); do
+        index=$((update_column_number_set[i] - 1))
+        value="${update_row_set[i]}"
+        row_array[$index]="$value"
+        done
+        # now what is left is to concat the array to a string using colons
+        # then replace the line in the same place we fetched it from
+        echo ".................... Success Update......................."
+        updated_row_save=$(IFS=":"; echo "${row_array[*]}")
+        sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
     fi
 
 
