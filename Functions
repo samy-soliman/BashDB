@@ -32,3 +32,17 @@ else
   echo 1
 fi
 }
+
+# check if a value exists in an array
+in_array() {
+    local value="$1"
+    shift
+    local array=("$@")
+    for item in "${array[@]}"; do
+        if [ "$item" == "$value" ]; then
+            echo "0"  # Return "0" for success (value found)
+            return
+        fi
+    done
+    echo "1"  # Return "1" for failure (value not found)
+}
