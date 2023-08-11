@@ -60,6 +60,5 @@ check_common_values() {
             fi
         done
     done
-
     echo "0"
 }

@@ -278,16 +278,10 @@ else
             break
             done
     done
-    echo "row update values ${update_row[@]}"
-    # check if there is no pk in the columns used in WHERE clause , if not we update the first match
-    result_pk=$(check_common_values update_column_number_set[@] primary_columns[@])
-    if [ "$result_pk" -eq 1 ]; then
-        echo "Common values exist"
-        # if there is part of the primary key in the WHERE clause we need to check if the full updated record
-        # compined with the primary key may break refencial integrity
-
-    else
-        # Using awk to extract the desired row and assign it to row_array
+    #echo "row update values ${update_row[@]}"
+    ################### start updating process ##################### 
+    # if number of possible fields to update greater than one , interrupt user to choose which one
+    if [ "${#update_row_match[@]}" -gt "1" ]; then
         while true; do
             echo "You have more than one row with this columns which one you want to update into"
             index=1
@@ -302,33 +296,44 @@ else
                     echo "You selected the row to update is $r"
                     chosen_row=${update_row_match[$((r - 1))]}
                     break
-
                 else
                     continue
                 fi
         done
-        echo "your row to cut $chosen_row"
-        row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
-        echo "array string $row_string"
+    else
+        # else we asign the only row to be updated
+        chosen_row=${update_row_match[0]}
+    fi
+    echo "your row to update $chosen_row"
+    
+    # Using awk to extract the desired row and assign it to row_array
+    row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
+    echo "row string $row_string"
 
-        # Split the row_string into an array
-        IFS=':' read -ra row_array <<< "$row_string"
-        # Print the updated first_array
-        #for element in "${row_array[@]}"; do
-        #    echo "original $element"
-        #done
-        # update the array we extracted with the values we want
-        for ((i = 0; i < ${#update_column_number_set[@]}; i++)); do
-        index=$((update_column_number_set[i] - 1))
-        value="${update_row_set[i]}"
-        row_array[$index]="$value"
-        done
-        # now what is left is to concat the array to a string using colons
-        # then replace the line in the same place we fetched it from
+    # Split the row_string into an array
+    IFS=':' read -ra row_array <<< "$row_string"
+    # Print the updated first_array
+    #for element in "${row_array[@]}"; do
+    #    echo "original $element"
+    #done
+    # update the array we extracted with the values we want
+    for ((i = 0; i < ${#update_column_number_set[@]}; i++)); do
+    index=$((update_column_number_set[i] - 1))
+    value="${update_row_set[i]}"
+    row_array[$index]="$value"
+    done
+    # now what is left is to concat the array to a string using colons
+    # then replace the line in the same place we fetched it from
+    updated_row_save=$(IFS=":"; echo "${row_array[*]}")
+    # but first we have to check for referencial integrity
+    result_pk=$(check_common_values update_column_number_set[@] primary_columns[@])
+    if [ "$result_pk" -eq 1 ]; then
+        echo "Your are trying to update some values from the PK"
+        echo "...................Checking Refenctianl Integrity......................."
+
+
+
+    else
         echo ".................... Success Update......................."
-        updated_row_save=$(IFS=":"; echo "${row_array[*]}")
         sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
     fi
-
-
-fi
