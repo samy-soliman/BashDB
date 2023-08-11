@@ -38,7 +38,18 @@ primary_columns=($(awk -F: 'NR==2 {
     }
     exit
 }' "$update_table.meta"))
-
+# make a primary key index to gather values while updating data
+Primary_keys=($(awk -F: 'NR==2{
+    for(i=1; i<=NF; i++) {
+        if($i > 2) {
+            printf "1 ";
+        }
+        else {
+            printf "0 ";
+        }
+    }
+    exit
+}' "$update_table.meta"))
 
 # take the columns the user want to update based on
 # define an array for users select columns
@@ -330,10 +341,40 @@ else
     if [ "$result_pk" -eq 1 ]; then
         echo "Your are trying to update some values from the PK"
         echo "...................Checking Refenctianl Integrity......................."
+        # cut the pk part and check if it violates integrity
+        touch temppk
+        temp_pk="temppk"
 
-
-
-    else
-        echo ".................... Success Update......................."
-        sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
+        # Convert Primary_columns array to a comma-separated list for cut command
+        pk_columns=$(IFS=','; echo "${primary_columns[*]}")
+        ## test the pk_columns is correct
+        for ((i = 0; i < ${#pk_columns[@]}; i++)); do
+           echo "pk_columns $((i+1)) value: ${pk_columns[i]}"
+        done
+        # Use cut command to extract the specified columns and save to the output file
+        cut -d ':' -f "$pk_columns" "$update_table" > "$temp_pk"
+        # get the pk values in record of update clause
+        # Initialize an empty string to store the concatenated values
+        concatenated_pk=""
+        # Loop through the arrays
+        for ((i=0; i<${#row_array[@]}; i++)); do
+            # Check if the value in array2 is 1
+            if [[ ${Primary_keys[i]} -eq 1 ]]; then
+                # Concatenate the value from array1 using a colon
+                concatenated_pk="${concatenated_pk}:${row_array[i]}"
+            fi
+        done
+        # Remove the leading colon from the concatenated values
+        concatenated_pk="${concatenated_pk#:}"
+        echo "Concatenated values: $concatenated_pk"
+        # loop and see if there is a match if pk's
+        found_match=$(awk -v pk="$concatenated_pk" 'BEGIN { found = "NOMATCH" } $0 == pk { found = "MATCH"; exit } END { print found }' "$temp_pk")
+        if [ "$found_match" == "MATCH" ]; then
+            echo "ERROR Data already Exists with this primary key !!!"
+        else
+            echo ".................... Success Update......................."
+            sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
+        fi
+        rm $temp_pk
     fi
+fi
