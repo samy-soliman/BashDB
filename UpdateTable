@@ -182,7 +182,7 @@ update_row_match=($(awk -F: -v update_cols_num="$update_column_number_string" -v
         }
     }
 ' $update_table.db))
-echo "update row match ${update_row_match[@]}"
+#echo "update row match ${update_row_match[@]}"
 
 if (( ${#update_row_match[@]} == 0 )); then
     echo "NO Match found Ensure you Entered right data"
@@ -223,7 +223,6 @@ else
             fi
             break
     done
-    echo "You choose to enter data into ${update_columns_names_set[@]}"
     # get columns metadata
     # Convert the Bash array to a comma-separated string
     update_columns_names_set_string=$(IFS=,; echo "${update_columns_names_set[*]}")

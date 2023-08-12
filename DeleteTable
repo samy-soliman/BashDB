@@ -27,14 +27,14 @@ if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select
         break 
 fi
 done
- 
+########################################################
 ##### if user selected option1 > ALL Data In Table #####
 if [ $select_option -eq "1" ]; then
         rm $delete_table.db
         touch $delete_table.db
 fi
 
-
+############################################################################################################
 ##### if user selected option2> take data of recoed he want to delete if exists delete it if not raise ERROR  #####
 if [ $select_option -eq "2" ]; then
 
@@ -187,7 +187,7 @@ if (( ${#delete_row_match[@]} == 0 )); then
 else
     echo "........Match found in Your Records.........."
 
-################### start updating process ##################### 
+################### start Deleting process ##################### 
     # if number of possible fields to delete greater than one , interrupt user to choose which one
 if [ "${#delete_row_match[@]}" -gt "1" ]; then
 while true; do
@@ -215,9 +215,7 @@ fi
 # delete the row
 sed -i "${chosen_row}d" "$delete_table.db"
 fi
-
-
-
+########################################################
 ##### if user selected option3> back to main menu  #####
 if [ $select_option -eq "3" ]; then
         :
