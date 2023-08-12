@@ -8,7 +8,7 @@ while true; do
         elif [ -f "$tbn" ]; then
                 echo "Table Already Exists , Enter a new Name;"; continue
         else
-                touch "$tbn" "$tbn.meta"
+                touch "$tbn.db" "$tbn.meta"
                 printf "n\nn" > "$tbn.meta"
                 break
         fi

@@ -5,7 +5,7 @@ while true; do
         test_select_table=$(check_name "$select_table")
         if [ $test_select_table -eq "1" ]; then
                 echo "Naming Error please Enter only English Alphapet"; continue
-        elif [ ! -f "$select_table" ]; then
+        elif [ ! -f "$select_table.db" ]; then
                 echo "Table Does Not Exists!!!!"; continue
         else
                 break
@@ -19,10 +19,11 @@ echo -ne "
 $(Red '1) ALL Data In Table')
 $(Red '2) Some Coulmns in The Table')
 $(Red '3) Rows')
+$(Red '4) Back TO Main Menu')
 "
 read select_option
 test_select_option=$(only_numbers "$select_option")
-if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "3" ]; then
+if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "4" ]; then
         echo "You choose $select_option"
         break 
 fi
@@ -30,7 +31,7 @@ done
  
 ##### if user selected option1 > ALL Data In Table #####
 if [ $select_option -eq "1" ]; then
-        sed 's/:/ | /g' "$select_table" | column -t -s "|"
+        sed 's/:/ | /g' "$select_table.db" | column -t -s "|"
 fi
 
 ##### if user selected option2 > interrupt him to choose which coulmn he wants from the table #####
@@ -100,7 +101,16 @@ select_column_number=($(awk -F: -v update_cols="$select_columns_names_string" '
 # convert select_column_number array to comma sperated to use in cut
 column_range=$(IFS=,; echo "${select_column_number[*]}")
 # list the users selected columns
-cut -d ':' -f "$column_range" "$select_table" | sed 's/\t/ | /g; s/^/| /; s/$/ |/' | column -t -s "|"
+cut -d ':' -f "$column_range" "$select_table.db" | sed 's/\t/ | /g; s/^/| /; s/$/ |/' | column -t -s "|"
 fi
 
 ##### if user selected option3 > interrupt him to enter values to return search based on #####
+
+
+
+
+
+##### if user selected option4> back to main menu  #####
+if [ $select_option -eq "4" ]; then
+        :
+fi

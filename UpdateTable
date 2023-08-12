@@ -5,7 +5,7 @@ while true; do
         test_update_table=$(check_name "$update_table")
         if [ $test_update_table -eq "1" ]; then
                 echo "Naming Error please Enter only English Alphapet"; continue
-        elif [ ! -f "$update_table" ]; then
+        elif [ ! -f "$update_table.db" ]; then
                 echo "Table Does Not Exists!!!!"; continue
         else
                 break
@@ -181,7 +181,7 @@ update_row_match=($(awk -F: -v update_cols_num="$update_column_number_string" -v
             printf("%d ", NR);  # Print the row number with a space after it
         }
     }
-' $update_table))
+' $update_table.db))
 echo "update row match ${update_row_match[@]}"
 
 if (( ${#update_row_match[@]} == 0 )); then
@@ -297,7 +297,7 @@ else
             echo "You have more than one row with this columns which one you want to update into"
             index=1
             for row_number in "${update_row_match[@]}"; do
-                row=$(sed -n "${row_number}p" "$update_table")
+                row=$(sed -n "${row_number}p" "$update_table.db")
                 echo "$index: $row"
                 ((index++))
             done
@@ -318,7 +318,7 @@ else
     echo "your row to update $chosen_row"
     
     # Using awk to extract the desired row and assign it to row_array
-    row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table")
+    row_string=$(awk -F ':' -v line="$chosen_row" 'NR == line { print $0 }' "$update_table.db")
     echo "row string $row_string"
 
     # Split the row_string into an array
@@ -352,7 +352,7 @@ else
            echo "pk_columns $((i+1)) value: ${pk_columns[i]}"
         done
         # Use cut command to extract the specified columns and save to the output file
-        cut -d ':' -f "$pk_columns" "$update_table" > "$temp_pk"
+        cut -d ':' -f "$pk_columns" "$update_table.db" > "$temp_pk"
         # get the pk values in record of update clause
         # Initialize an empty string to store the concatenated values
         concatenated_pk=""

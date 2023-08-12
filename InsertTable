@@ -5,7 +5,7 @@ while true; do
         test_insert_table=$(check_name "$insert_table")
         if [ $test_insert_table -eq "1" ]; then
                 echo "Naming Error please Enter only English Alphapet"; continue
-        elif [ ! -f "$insert_table" ]; then
+        elif [ ! -f "$insert_table.db" ]; then
                 echo "Table Does Not Exists!!!!"; continue
         else
                 break
@@ -104,7 +104,7 @@ while true; do
 
 
         # Use cut command to extract the specified columns and save to the output file
-        cut -d ':' -f "$columns" "$insert_table" > "$tempcols"
+        cut -d ':' -f "$columns" "$insert_table.db" > "$tempcols"
         }
 
         # Call the function to perform the extraction
@@ -124,7 +124,7 @@ while true; do
         else
         echo "..................SUCCESS INERTING YOUR DATA.................."
         row_value=$(IFS=":"; echo "${row[*]}")
-        echo "$row_value" >> $insert_table
+        echo "$row_value" >> $insert_table.db
         break
         fi
 
