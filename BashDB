@@ -77,8 +77,12 @@ $(RedB 'Choose an option:')
                                         # Create Table Option
                                         1) source ../../CreateTable; break;;
                                         2) source ../../InsertTable; break;;
+                                        3) source ../../ListTable;   break;;
+                                        4) source ../../DropTable;   break;;
+                                        5) source ../../SelectTable; break;;
+                                        6) source ../../DeleteTable; break;;
                                         7) source ../../UpdateTable; break;;
-
+                                        8) break;;
                                 esac
                         done
                         break

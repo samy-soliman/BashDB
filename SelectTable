@@ -1,0 +1,106 @@
+# read table name to select from
+while true; do
+        echo "Choose the Table You Want to select on"
+        read select_table
+        test_select_table=$(check_name "$select_table")
+        if [ $test_select_table -eq "1" ]; then
+                echo "Naming Error please Enter only English Alphapet"; continue
+        elif [ ! -f "$select_table" ]; then
+                echo "Table Does Not Exists!!!!"; continue
+        else
+                break
+        fi
+done
+
+# take user option on what operation to do 
+while true; do
+echo "How do You Want To Select Your Data"
+echo -ne "
+$(Red '1) ALL Data In Table')
+$(Red '2) Some Coulmns in The Table')
+$(Red '3) Rows')
+"
+read select_option
+test_select_option=$(only_numbers "$select_option")
+if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "3" ]; then
+        echo "You choose $select_option"
+        break 
+fi
+done
+ 
+##### if user selected option1 > ALL Data In Table #####
+if [ $select_option -eq "1" ]; then
+        sed 's/:/ | /g' "$select_table" | column -t -s "|"
+fi
+
+##### if user selected option2 > interrupt him to choose which coulmn he wants from the table #####
+if [ $select_option -eq "2" ]; then
+## gather metadata about the table ##
+# get the number of columns in table
+columns_number=$(awk -F: '{ print NF; exit }' $select_table.meta)
+# get the columns names
+columns_names=($(awk -F ':' 'NR==1 {for (i=1; i<=NF; i++) print $i}' $select_table.meta))
+## end of gathering 
+
+# interrupt the user for the columns to select
+select_columns_names=()
+while true; do
+        echo "Enter The Number of Columns you want to select"
+        read user_columns_number
+        test_columns_number=$(only_numbers "$user_columns_number")
+        if [ $test_columns_number -eq "0" ] && [ "$user_columns_number" -gt "0" ] && [ "$user_columns_number" -le "$columns_number" ]; then
+                for i in $(seq 1 $user_columns_number);
+                do
+                        while true; do 
+                        echo "Enter name from Your columns name"
+                        echo "${columns_names[@]}"
+                        read -p "Enter $i column name " v
+                        x=$v
+                        # check column exists
+                        result_inarray=$(in_array "$v" "${columns_names[@]}")
+                        if [ "$result_inarray" -eq "0" ]; then
+                                if [ $(check_name "$x") -eq "0" ]; then
+                                        select_columns_names+=("$x")
+                                        break
+                                fi
+                        else
+                                echo "Wrong Input Please Try again."
+                                continue
+                        fi
+                        break
+                        done
+                done
+        else
+                echo "Error Number of columns Issue!! make sure it is positive and less than oe equals your original table columns"
+                continue
+        fi
+        break
+done
+
+# get the user selected columns number in the table
+select_columns_names_string=$(IFS=,; echo "${select_columns_names[*]}")
+# Use the converted string in the AWK script
+select_column_number=($(awk -F: -v update_cols="$select_columns_names_string" '
+        BEGIN {
+                n = split(update_cols, update_cols_array, ",");
+                for (i = 1; i <= n; i++) {
+                update_cols_lookup[update_cols_array[i]] = 1;
+                }
+        }
+        NR == 1 {
+                for (i = 1; i <= NF; i++) {
+                if ($i in update_cols_lookup) {
+                        printf "%d ", i;
+                }
+                }
+                exit;
+        } ' $select_table.meta))
+
+##
+# convert select_column_number array to comma sperated to use in cut
+column_range=$(IFS=,; echo "${select_column_number[*]}")
+# list the users selected columns
+cut -d ':' -f "$column_range" "$select_table" | sed 's/\t/ | /g; s/^/| /; s/$/ |/' | column -t -s "|"
+fi
+
+##### if user selected option3 > interrupt him to enter values to return search based on #####
