@@ -79,7 +79,7 @@ $(RedB 'Choose an option:')
                                         2) source ../../InsertTable; break;;
                                         3) source ../../ListTable;   break;;
                                         4) source ../../DropTable;   break;;
-                                        5) source ../../SelectTable; break;;
+                                        5) source ../../SelectTable       ;;
                                         6) source ../../DeleteTable; break;;
                                         7) source ../../UpdateTable; break;;
                                         8) break;;
@@ -87,7 +87,8 @@ $(RedB 'Choose an option:')
                         done
                         break
                 fi
-        done; break;;
+        done
+        cd ../../ ; break;;
         # List Databases Option
         3) cd ./BASHDBS
         echo -ne "$(ls -d */ | sed 's#/##') \n"

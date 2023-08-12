@@ -1,0 +1,16 @@
+# read table name to Drop from
+while true; do
+        echo "Choose the Table You Want to drop"
+        read drop_table
+        test_drop_table=$(check_name "$drop_table")
+        if [ $test_drop_table -eq "1" ]; then
+                echo "Naming Error please Enter only English Alphapet"; continue
+        elif [ ! -f "$drop_table.db" ]; then
+                echo "Table Does Not Exists!!!!"; continue
+        else
+                break
+        fi
+done
+
+rm $drop_table.db
+rm $drop_table.meta

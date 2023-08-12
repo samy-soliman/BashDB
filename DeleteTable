@@ -1,0 +1,224 @@
+# read table name to Drop from
+while true; do
+        echo "Choose the Table You Want to Delete From"
+        read delete_table
+        test_delete_table=$(check_name "$delete_table")
+        if [ $test_delete_table -eq "1" ]; then
+                echo "Naming Error please Enter only English Alphapet"; continue
+        elif [ ! -f "$delete_table.db" ]; then
+                echo "Table Does Not Exists!!!!"; continue
+        else
+                break
+        fi
+done
+
+# take user option on what operation to do 
+while true; do
+echo "How do You Want To Delete Your Data"
+echo -ne "
+$(Red '1) ALL Data In Table')
+$(Red '2) Specific Row')
+$(Red '3) Back TO Main Menu')
+"
+read select_option
+test_select_option=$(only_numbers "$select_option")
+if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "4" ]; then
+        echo "You choose $select_option"
+        break 
+fi
+done
+ 
+##### if user selected option1 > ALL Data In Table #####
+if [ $select_option -eq "1" ]; then
+        rm $delete_table.db
+        touch $delete_table.db
+fi
+
+
+##### if user selected option2> take data of recoed he want to delete if exists delete it if not raise ERROR  #####
+if [ $select_option -eq "2" ]; then
+
+## getting table meta
+# get the number of columns in table
+columns_number=$(awk -F: '{ print NF; exit }' $delete_table.meta)
+#echo "you table colnum is $columns_number"
+# get the columns names
+columns_names=($(awk -F ':' 'NR==1 {for (i=1; i<=NF; i++) print $i}' $delete_table.meta))
+# Populate the column_types array to check constrains 
+column_types=($(awk -F: 'NR==2{
+    for(i=1; i<=NF; i++) {
+        if($i % 2 == 0)
+            printf "string ";
+        else
+            printf "integer ";
+    }
+    exit
+}' $delete_table.meta))
+fi
+
+# take the columns the user want to delete based on
+# define an array for users select columns
+delete_columns_names=()
+while true; do
+        echo "Enter The Number of Columns of your Record to search with"
+        read user_columns_number
+        test_columns_number=$(only_numbers "$user_columns_number")
+        if [ $test_columns_number -eq "0" ] && [ "$user_columns_number" -gt "0" ] && [ "$user_columns_number" -le "$columns_number" ]; then
+                for i in $(seq 1 $user_columns_number);
+                do
+                        while true; do 
+                        echo "Enter name from Your columns name"
+                        echo "${columns_names[@]}"
+                        read -p "Enter $i column name " v
+                        x=$v
+                        # check column exists
+                        result_inarray=$(in_array "$v" "${columns_names[@]}")
+                        if [ "$result_inarray" -eq "0" ]; then
+                                if [ $(check_name "$x") -eq "0" ]; then
+                                        delete_columns_names+=("$x")
+                                        break
+                                fi
+                        else
+                                echo "Wrong Input Please Try again."
+                                continue
+                        fi
+                        break
+                        done
+                done
+        else
+                echo "Error Number of columns Issue!! make sure it is positive and less than oe equals your original table columns"
+                continue
+        fi
+        break
+done
+
+
+# get the delete columns meta data
+# Populate the column_types array to check constrains 
+# Convert the Bash array to a comma-separated string
+delete_columns_names_string=$(IFS=,; echo "${delete_columns_names[*]}")
+# Use the converted string in the AWK script
+delete_column_number=($(awk -F: -v delete_cols="$delete_columns_names_string" '
+    BEGIN {
+        n = split(delete_cols, delete_cols_array, ",");
+        for (i = 1; i <= n; i++) {
+            delete_cols_lookup[delete_cols_array[i]] = 1;
+        }
+    }
+    NR == 1 {
+        for (i = 1; i <= NF; i++) {
+            if ($i in delete_cols_lookup) {
+                printf "%d ", i;
+            }
+        }
+        exit;
+    } ' $delete_table.meta))
+
+# Convert the Bash array to a comma-separated string
+delete_column_number_string=$(IFS=,; echo "${delete_column_number[*]}")
+# get user specific columns datatybe
+delete_column_types=($(awk -F: -v delete_cols_num="$delete_column_number_string" '
+    BEGIN {
+        n = split(delete_cols_num, delete_cols_array, ",");
+        for (i = 1; i <= n; i++) {
+            delete_cols_lookup[delete_cols_array[i]] = 1;
+        }
+    }
+    NR == 2 {
+        for (i = 1; i <= NF; i++) {
+            if (i in delete_cols_lookup) {
+                if ($i % 2 == 0)
+                    printf "string ";
+                else
+                    printf "integer ";
+            }
+        }
+        exit;
+    } ' $delete_table.meta))
+#
+# loop and take user input for each column, check its data type
+delete_row=()
+for ((i = 1; i <= $user_columns_number ; i++)); do
+        while true; do         
+                read -p "Enter ${delete_columns_names[$((i - 1))]} column its datatype is ${delete_column_types[$((i - 1))]} : " v
+                # check inputs datatypes
+                if [[ "${delete_column_types[$((i - 1))]}" == "string" ]]; then
+                        if [ $(check_name "$v") -eq "1" ]; then
+                                echo "Error wrong data Type"
+                                continue
+                        fi
+                elif [[ "${delete_column_types[$((i - 1))]}" == "integer" ]]; then
+                        if [ $(only_numbers "$v") -eq "1" ]; then
+                                echo "Error wrong data Type"
+                                continue
+                        fi
+                fi
+        delete_row+=("$v")
+        break
+        done
+done
+
+delete_row_string=$(IFS=,; echo "${delete_row[*]}")
+#echo "row delete string ${delete_row_string[@]}"
+delete_row_match=($(awk -F: -v delete_cols_num="$delete_column_number_string" -v delete_row_col="$delete_row_string" '
+    BEGIN {
+        split(delete_cols_num, delete_cols_num_array, ",");
+        m = split(delete_row_col, delete_row_col_array, ",");
+    }
+    {
+        match_count = 0;
+        for (i = 1; i <= NF; i++) {
+            for (j = 1; j <= m; j++) {
+                if (i == delete_cols_num_array[j] && $i == delete_row_col_array[j]) {
+                    match_count++;
+                    break;  # No need to continue checking values
+                }
+            }
+        }
+        
+        if (match_count == m) {
+            printf("%d ", NR);  # Print the row number with a space after it
+        }
+    }
+' $delete_table.db))
+
+if (( ${#delete_row_match[@]} == 0 )); then
+    echo "NO Match found Ensure you Entered right data"
+else
+    echo "........Match found in Your Records.........."
+
+################### start updating process ##################### 
+    # if number of possible fields to delete greater than one , interrupt user to choose which one
+if [ "${#delete_row_match[@]}" -gt "1" ]; then
+while true; do
+        echo "You have more than one row with this columns which one you want to delete"
+        index=1
+        for row_number in "${delete_row_match[@]}"; do
+        row=$(sed -n "${row_number}p" "$delete_table.db")
+        echo "$index: $row"
+        ((index++))
+        done
+        read r
+        # check inputs datatypes
+        if [ "$r" -gt "0" ] && [ "$r" -le "$index" ]; then
+                echo "You selected the row to delete is $r"
+                chosen_row=${delete_row_match[$((r - 1))]}
+                break
+        else
+                continue
+        fi
+done
+else
+# else we asign the only row to be deleted
+chosen_row=${delete_row_match[0]}
+fi
+# delete the row
+sed -i "${chosen_row}d" "$delete_table.db"
+fi
+
+
+
+##### if user selected option3> back to main menu  #####
+if [ $select_option -eq "3" ]; then
+        :
+fi
