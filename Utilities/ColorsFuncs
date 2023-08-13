@@ -6,11 +6,24 @@ green='\e[32m'
 blue='\e[34m'
 clear='\e[0m'
 redB='\e[0;41m'
+greenB='\e[0;42m'
 ##
 # Color Functions
 # echo -ne $(ColorBlue 'Some text here')
 ##
+#PurpleBrightB='\e[1;105m'
+yellowBrightB='\e[1;103m'  # Bright yellow background color code
+whiteBold='\e[1;97m'       # White bold text color code
 
+purpleBright='\e[1;95m'  # Bright purple text color code
+
+PurpleOnYellowB(){
+  echo -ne $purpleBright$yellowBrightB$1$clear
+}
+
+YellowBrightB(){
+  echo -ne $yellowBrightB$whiteBold$1$clear
+}
 Red(){
   echo -ne $red$1$clear
 }
@@ -19,6 +32,9 @@ echo -ne $redB$1$clear
 }
 Green(){
 	echo -ne $green$1$clear
+}
+GreenB(){
+  echo -ne $greenB$1$clear
 }
 Blue(){
 	echo -ne $blue$1$clear

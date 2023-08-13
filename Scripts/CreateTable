@@ -85,9 +85,11 @@ done
 sed -i "1s/$/:$col_name/" $tbn.meta
 #sed -i "$((i + 1))s/$/:$col_type/" $tbn.meta
 sed -i "2s/$/:$col_type/" $tbn.meta
-
 done
 sed -i 's/^n://' $tbn.meta
+
+echo -ne "$(GreenB 'Table Creation Success')\n" 
+
 break
 else
 echo -ne "$(RedB 'Error Enter a positive number')\n" 

@@ -45,7 +45,7 @@ echo "╚═══════════════════════�
 entry_menu(){
 while true; do
 echo -ne "
-What Do you want to DO?
+$(PurpleOnYellowB 'What Do you want to DO?')
 $(Red '1) Create DataBase') 
 $(Red '2) Connect DataBase')
 $(Red '3) List DataBases')
@@ -83,12 +83,12 @@ case $entry in
                 elif [ ! -d "$dbn2" ]; then
                         echo "DataBase Does Not Exists!! Did You Enter name Correctly: ;"; continue
                 else
-                        echo "...........Connecting you to DataBase $dbn2 ............"
+                        echo -ne "$(GreenB "...........Connecting you to DataBase $dbn2 ............")\n"
                         cd "$dbn2"
                         # Start Table Menu 
                         while true; do
 echo -ne "
-What Do you want to DO?
+$(PurpleOnYellowB 'What Do you want to DO?')
 $(Red '1) Create Table') 
 $(Red '2) Insert into Table')
 $(Red '3) List Tables')
