@@ -1,0 +1,79 @@
+#! /usr/bin/bash
+
+# Declare Advanced Regex
+shopt -s extglob
+
+# check names to contain only alpha characters
+check_name () {
+if [[ $1 =~ ^[a-zA-Z]+$ ]]; then
+  echo 0
+else
+  echo 1
+fi
+}
+#read x
+#test_name=$(check_name "$x")
+
+#check value is not null
+not_null () {
+if [ ! -z "$1" ]; then
+  echo 0
+else
+  echo 1
+fi
+}
+#test_result=$(not_null "$x")
+
+# check value is only numbers
+only_numbers (){
+if [[ $1 =~ ^[0-9]+$ ]]; then
+  echo 0
+else
+  echo 1
+fi
+}
+
+# check if a value exists in an array
+in_array() {
+    local value="$1"
+    shift
+    local array=("$@")
+
+    for item in "${array[@]}"; do
+        if [ "$item" == "$value" ]; then
+            echo "0"  # Return "0" for success (value found)
+            return
+        fi
+    done
+    echo "1"  # Return "1" for failure (value not found)
+}
+
+# Function to check if common values exist in arrays
+check_common_values() {
+    local array1=("${!1}")  # Get values of the first array
+    local array2=("${!2}")  # Get values of the second array
+
+    for value1 in "${array1[@]}"; do
+        for value2 in "${array2[@]}"; do
+            if [ "$value1" == "$value2" ]; then
+                echo "1"
+                return
+            fi
+        done
+    done
+    echo "0"
+}
+
+
+# Function to handle user input
+handle_input() {
+    prev_key=""
+    while true; do
+        read -rsn 1 key
+        if [[ $key == 'b' && $key == "$prev_key" ]]; then
+            echo "Breaking the script!"
+            break
+        fi
+        prev_key=$key
+    done
+}

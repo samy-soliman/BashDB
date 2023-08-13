@@ -1,0 +1,284 @@
+# read table name to select from
+while true; do
+        echo "Choose the Table You Want to select on"
+        read select_table
+        test_select_table=$(check_name "$select_table")
+        if [ $test_select_table -eq "1" ]; then
+                echo "Naming Error please Enter only English Alphapet"; continue
+        elif [ ! -f "$select_table.db" ]; then
+                echo "Table Does Not Exists!!!!"; continue
+        else
+                break
+        fi
+done
+
+# take user option on what operation to do 
+while true; do
+echo "How do You Want To Select Your Data"
+echo -ne "
+$(Red '1) ALL Data In Table')
+$(Red '2) Some Coulmns in The Table')
+$(Red '3) Rows')
+$(Red '4) Back TO Main Menu')
+"
+read select_option
+test_select_option=$(only_numbers "$select_option")
+if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "4" ]; then
+        #echo "You choose $select_option"
+        break 
+fi
+done
+########################################################
+##### if user selected option1 > ALL Data In Table #####
+if [ $select_option -eq "1" ]; then
+        sed 's/:/ | /g' "$select_table.db" | column -t -s "|"
+fi
+###################################################################################################
+##### if user selected option2 > interrupt him to choose which coulmn he wants from the table #####
+if [ $select_option -eq "2" ]; then
+## gather metadata about the table ##
+# get the number of columns in table
+columns_number=$(awk -F: '{ print NF; exit }' $select_table.meta)
+# get the columns names
+columns_names=($(awk -F ':' 'NR==1 {for (i=1; i<=NF; i++) print $i}' $select_table.meta))
+## end of gathering 
+
+# interrupt the user for the columns to select
+select_columns_names=()
+while true; do
+        echo "Enter The Number of Columns you want to select"
+        read user_columns_number
+        test_columns_number=$(only_numbers "$user_columns_number")
+        if [ $test_columns_number -eq "0" ] && [ "$user_columns_number" -gt "0" ] && [ "$user_columns_number" -le "$columns_number" ]; then
+                for i in $(seq 1 $user_columns_number);
+                do
+                        while true; do 
+                        echo "Enter name from Your columns name"
+                        echo "${columns_names[@]}"
+                        read -p "Enter $i column name " v
+                        x=$v
+                        # check column exists
+                        result_inarray=$(in_array "$v" "${columns_names[@]}")
+                        if [ "$result_inarray" -eq "0" ]; then
+                                if [ $(check_name "$x") -eq "0" ]; then
+                                        select_columns_names+=("$x")
+                                        break
+                                fi
+                        else
+                                echo "Wrong Input Please Try again."
+                                continue
+                        fi
+                        break
+                        done
+                done
+        else
+                echo "Error Number of columns Issue!! make sure it is positive and less than oe equals your original table columns"
+                continue
+        fi
+        break
+done
+
+# get the user selected columns number in the table
+select_columns_names_string=$(IFS=,; echo "${select_columns_names[*]}")
+# Use the converted string in the AWK script
+select_column_number=($(awk -F: -v select_cols="$select_columns_names_string" '
+        BEGIN {
+                n = split(select_cols, select_cols_array, ",");
+                for (i = 1; i <= n; i++) {
+                select_cols_lookup[select_cols_array[i]] = 1;
+                }
+        }
+        NR == 1 {
+                for (i = 1; i <= NF; i++) {
+                if ($i in select_cols_lookup) {
+                        printf "%d ", i;
+                }
+                }
+                exit;
+        } ' $select_table.meta))
+
+##
+# convert select_column_number array to comma sperated to use in cut
+column_range=$(IFS=,; echo "${select_column_number[*]}")
+# list the users selected columns
+cut -d ':' -f "$column_range" "$select_table.db" | sed 's/\t/ | /g; s/^/| /; s/$/ |/' | column -t -s "|"
+
+# cleaning
+unset columns_number
+unset columns_names
+fi
+
+##############################################################################################
+##### if user selected option3 > interrupt him to enter values to return search based on #####
+if [ $select_option -eq "3" ]; then
+## getting table meta
+# get the number of columns in table
+columns_number=$(awk -F: '{ print NF; exit }' $select_table.meta)
+#echo "you table colnum is $columns_number"
+# get the columns names
+columns_names=($(awk -F ':' 'NR==1 {for (i=1; i<=NF; i++) print $i}' $select_table.meta))
+# Populate the column_types array to check constrains 
+column_types=($(awk -F: 'NR==2{
+    for(i=1; i<=NF; i++) {
+        if($i % 2 == 0)
+            printf "string ";
+        else
+            printf "integer ";
+    }
+    exit
+}' $select_table.meta))
+
+
+# take the columns the user want to select based on
+# define an array for users select columns
+select_columns_names=()
+while true; do
+        echo "Enter The Number of Columns of your Record to search with"
+        read user_columns_number
+        test_columns_number=$(only_numbers "$user_columns_number")
+        if [ $test_columns_number -eq "0" ] && [ "$user_columns_number" -gt "0" ] && [ "$user_columns_number" -le "$columns_number" ]; then
+                for i in $(seq 1 $user_columns_number);
+                do
+                        while true; do 
+                        echo "Enter name from Your columns name"
+                        echo "${columns_names[@]}"
+                        read -p "Enter $i column name " v
+                        x=$v
+                        # check column exists
+                        result_inarray=$(in_array "$v" "${columns_names[@]}")
+                        if [ "$result_inarray" -eq "0" ]; then
+                                if [ $(check_name "$x") -eq "0" ]; then
+                                        select_columns_names+=("$x")
+                                        break
+                                fi
+                        else
+                                echo "Wrong Input Please Try again."
+                                continue
+                        fi
+                        break
+                        done
+                done
+        else
+                echo "Error Number of columns Issue!! make sure it is positive and less than oe equals your original table columns"
+                continue
+        fi
+        break
+done
+# get the select columns meta data
+# Populate the column_types array to check constrains 
+# Convert the Bash array to a comma-separated string
+select_columns_names_string=$(IFS=,; echo "${select_columns_names[*]}")
+# Use the converted string in the AWK script
+select_column_number=($(awk -F: -v select_cols="$select_columns_names_string" '
+    BEGIN {
+        n = split(select_cols, select_cols_array, ",");
+        for (i = 1; i <= n; i++) {
+            select_cols_lookup[select_cols_array[i]] = 1;
+        }
+    }
+    NR == 1 {
+        for (i = 1; i <= NF; i++) {
+            if ($i in select_cols_lookup) {
+                printf "%d ", i;
+            }
+        }
+        exit;
+    } ' $select_table.meta))
+
+# Convert the Bash array to a comma-separated string
+select_column_number_string=$(IFS=,; echo "${select_column_number[*]}")
+# get user specific columns datatybe
+select_column_types=($(awk -F: -v select_cols_num="$select_column_number_string" '
+    BEGIN {
+        n = split(select_cols_num, select_cols_array, ",");
+        for (i = 1; i <= n; i++) {
+            select_cols_lookup[select_cols_array[i]] = 1;
+        }
+    }
+    NR == 2 {
+        for (i = 1; i <= NF; i++) {
+            if (i in select_cols_lookup) {
+                if ($i % 2 == 0)
+                    printf "string ";
+                else
+                    printf "integer ";
+            }
+        }
+        exit;
+    } ' $select_table.meta))
+#
+# loop and take user input for each column, check its data type
+select_row=()
+for ((i = 1; i <= $user_columns_number ; i++)); do
+        while true; do         
+                read -p "Enter ${select_columns_names[$((i - 1))]} column its datatype is ${select_column_types[$((i - 1))]} : " v
+                # check inputs datatypes
+                if [[ "${select_column_types[$((i - 1))]}" == "string" ]]; then
+                        if [ $(check_name "$v") -eq "1" ]; then
+                                echo "Error wrong data Type"
+                                continue
+                        fi
+                elif [[ "${select_column_types[$((i - 1))]}" == "integer" ]]; then
+                        if [ $(only_numbers "$v") -eq "1" ]; then
+                                echo "Error wrong data Type"
+                                continue
+                        fi
+                fi
+        select_row+=("$v")
+        break
+        done
+done
+
+select_row_string=$(IFS=,; echo "${select_row[*]}")
+#echo "row select string ${select_row_string[@]}"
+select_row_match=($(awk -F: -v select_cols_num="$select_column_number_string" -v select_row_col="$select_row_string" '
+    BEGIN {
+        split(select_cols_num, select_cols_num_array, ",");
+        m = split(select_row_col, select_row_col_array, ",");
+    }
+    {
+        match_count = 0;
+        for (i = 1; i <= NF; i++) {
+            for (j = 1; j <= m; j++) {
+                if (i == select_cols_num_array[j] && $i == select_row_col_array[j]) {
+                    match_count++;
+                    break;  # No need to continue checking values
+                }
+            }
+        }
+        
+        if (match_count == m) {
+            printf("%d ", NR);  # Print the row number with a space after it
+        }
+    }
+' $select_table.db))
+
+if (( ${#select_row_match[@]} == 0 )); then
+    echo "NO Match found Ensure you Entered right data"
+else
+    echo "........Match found in Your Records.........."
+        ################### start Select process ##################### 
+        # if number of possible fields to select greater than one , interrupt user to choose which one
+        index=1
+        for row_number in "${select_row_match[@]}"; do
+        row=$(sed -n "${row_number}p" "$select_table.db")
+        echo "$index: $row"
+        ((index++))
+        done
+fi
+
+# Cleaning
+unset columns_number
+unset columns_names
+unset column_types
+unset select_column_number
+unset select_column_types
+unset select_row
+unset select_row_match
+
+fi
+########################################################
+##### if user selected option4> back to main menu  #####
+if [ $select_option -eq "4" ]; then
+        :
+fi
