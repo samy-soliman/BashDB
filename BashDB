@@ -143,8 +143,17 @@ $(RedB 'Choose an option:')
 esac
 done
 }
-# Call Entry Menu Function
-entry_menu
+echo "Press a key.... ('q' to Quit, 'c' to continue):"
+
+while true; do
+    read -rsn 1 key
+    case "$key" in
+        [qQ]) break ;;
+        [cC]) entry_menu;;
+        *) ;;
+    esac
+done
+
 
 echo "        ════════════════════════════════"
 echo "         ══════════════════════════════"
@@ -157,13 +166,6 @@ echo "     ═══════════════════════
 echo "      ════════════════════════════════════"
 echo "       ══════════════════════════════════"
 echo "══════════════════════════════════════════════════"
-
-
-
-
-
-
-
 
 # End Trapping 
 trap 2

@@ -1,11 +1,12 @@
+create_table(){
 while true; do
         echo "Enter Your New Table Name: "
         read tbn
         test_tbn=$(check_name "$tbn")
         if [ $test_tbn -eq "1" ]; then
-                echo "Naming Error please Enter only English Alphapet"; continue
+               echo -ne "$(RedB 'Naming Error please Enter only English Alphapet')\n"; continue
         elif [ -f "$tbn.db" ]; then
-                echo "Table Already Exists , Enter a new Name;"; continue
+                echo -ne "$(RedB 'Table Already Exists')\n"; continue
         else
                 touch "$tbn.db" "$tbn.meta"
                 printf "n\nn" > "$tbn.meta"
@@ -29,12 +30,12 @@ while true; do
         # check column duplication
         result_inarray_create_columns=$(in_array "$col_name" "${create_columns[@]}")
         if [ $test_col_name -eq "1" ]; then
-                echo "Naming Error please Enter only English Alphapet"; continue
+               echo -ne "$(RedB 'Naming Error please Enter only English Alphapet')\n"; continue
         elif [ "$result_inarray_create_columns" -eq "1" ]; then
                         create_columns+=("$col_name")
                         break
         else
-                echo "Wrong Input Please Try again, Did you enter same name again"
+                echo -ne "$(RedB 'Wrong Input Please Try again, Did you enter same name again')\n"
                 continue
         fi
 done
@@ -51,7 +52,7 @@ if [ $test_columns_number -eq "1" ]; then
         continue
 fi
 if [ $col_type -ne "1" ] && [ $col_type -ne "2" ]; then
-        echo "Choose correct option"
+        echo -ne "$(RedB 'Choose correct option')\n"
         continue
 fi
 break
@@ -66,11 +67,11 @@ $(Red '2) Yes')
 read col_pk
 test_col_pk=$(only_numbers "$col_pk")
 if [ $test_col_pk -eq "1" ]; then
-        echo "enter correct option" 
+        echo -ne "$(RedB 'Choose correct option')\n" 
         continue
 fi
 if [ $col_pk -ne "1" ] && [ $col_pk -ne "2" ]; then
-        echo "Choose correct option"
+        echo -ne "$(RedB 'Choose correct option')\n"
         continue
 fi
 if [ $col_pk -eq "2" ]; then
@@ -89,10 +90,13 @@ done
 sed -i 's/^n://' $tbn.meta
 break
 else
-echo "Error Enter a positive number"
+echo -ne "$(RedB 'Error Enter a positive number')\n" 
 continue
 fi
 done
 
 # cleanig
 unset create_columns
+}
+
+create_table

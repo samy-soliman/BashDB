@@ -4,7 +4,7 @@ while true; do
         read delete_table
         test_delete_table=$(check_name "$delete_table")
         if [ $test_delete_table -eq "1" ]; then
-                echo "Naming Error please Enter only English Alphapet"; continue
+                echo -ne "$(redB 'Naming Error please Enter only English Alphapet')\n"; continue
         elif [ ! -f "$delete_table.db" ]; then
                 echo "Table Does Not Exists!!!!"; continue
         else
@@ -23,7 +23,7 @@ $(Red '3) Back TO Main Menu')
 read select_option
 test_select_option=$(only_numbers "$select_option")
 if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "4" ]; then
-        echo "You choose $select_option"
+        #echo "You choose $select_option"
         break 
 fi
 done
