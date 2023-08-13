@@ -1,18 +1,45 @@
 #! /bin/bash
-# trap term signals
+# trap signals
 trap '' 2
 # Import Color Functions
-source ./ColorsFuncs
+source ./Utilities/ColorsFuncs
 # Import Utility Functions
-source ./Functions
+# Run the input handling function in the background
+source ./Utilities/Functions
 # Welcome message here
-cat ./Welcome
+echo "        ════════════════════════════════"
+echo "         ══════════════════════════════"
+echo " ══════════════════════════════════════════════"
+echo "  ════════════════════════════════════════════"
+echo "   ══════════════════════════════════════════"
+cat ./Utilities/Welcome
+echo "    ════════════════════════════════════════"
+echo "     ══════════════════════════════════════"
+echo "      ════════════════════════════════════"
+echo "       ══════════════════════════════════"
+echo "══════════════════════════════════════════════════"
+
+
 # Initialization of Database
-if [ ! -d "BASHDBS" ]; then
-  echo ".............Initializing............."
-  mkdir "BASHDBS"
+DB_PATH="./BASHDBS"
+if [ ! -d "$DB_PATH" ]; then
+  echo ".............Initializing Your Files,First Time!!............."
+  mkdir "$DB_PATH"
 fi
 # Breif message here
+echo "╔════════════════════════════════════════════════╗"
+printf "║\e[1;38;2;255;255;255m\e[48;2;128;0;128m %+30s %-15s \e[0m║\n" "Summary" 
+printf "║\e[1;38;2;0;0;0m\e[48;2;211;211;211m %-30s ║ %-13s \e[0m║\n" "DataBases" "Tables"
+echo "╟────────────────────────────────────────────────╢"
+
+for dir in "$DB_PATH"/*; do
+    if [ -d "$dir" ]; then
+        db_count=$(find "$dir" -type f -name "*.db" | wc -l)
+        printf "║\e[1;34;46m %-30s ║ %-13s \e[0m║\n" "$(basename "$dir"):" "$db_count"
+    fi
+done
+
+echo "╚════════════════════════════════════════════════╝"
 
 # manage databases menu
 entry_menu(){
@@ -29,7 +56,7 @@ $(RedB 'Choose an option:')
 read entry
 case $entry in
         # Create Database Option
-        1) cd ./BASHDBS;
+        1) cd "$DB_PATH";
 	while true; do
                 echo "Enter Your New DataBase Name: ";
                 read dbn;
@@ -44,9 +71,9 @@ case $entry in
                         break
                 fi
         done
-        cd ../ ; break;;
+        cd ../ ;;
         # Connect to Database Option
-        2) cd ./BASHDBS
+        2) cd "$DB_PATH"
         while true; do
                 echo "Enter Your DataBase Name: ";
                 read dbn2;
@@ -75,26 +102,26 @@ $(RedB 'Choose an option:')
                                 read table
                                 case $table in
                                         # Create Table Option
-                                        1) source ../../CreateTable; break;;
-                                        2) source ../../InsertTable; break;;
-                                        3) source ../../ListTable;   break;;
-                                        4) source ../../DropTable;   break;;
-                                        5) source ../../SelectTable       ;;
-                                        6) source ../../DeleteTable; break;;
-                                        7) source ../../UpdateTable; break;;
+                                        1) source ../../Scripts/CreateTable;;
+                                        2) source ../../Scripts/InsertTable;;
+                                        3) source ../../Scripts/ListTable  ;;
+                                        4) source ../../Scripts/DropTable  ;;
+                                        5) source ../../Scripts/SelectTable;;
+                                        6) source ../../Scripts/DeleteTable;;
+                                        7) source ../../Scripts/UpdateTable;;
                                         8) break;;
                                 esac
                         done
                         break
                 fi
         done
-        cd ../../ ; break;;
+        cd ../../ ;;
         # List Databases Option
-        3) cd ./BASHDBS
+        3) cd "$DB_PATH"
         echo -ne "$(ls -d */ | sed 's#/##') \n"
-        cd ../ ; break;;
+        cd ../ ;;
         # Delete Database Option
-        4) cd ./BASHDBS
+        4) cd "$DB_PATH"
         while true; do
                 echo "Enter Your DataBase Name: ";
                 read dbn3;
@@ -109,14 +136,13 @@ $(RedB 'Choose an option:')
                         break
                 fi
         done
-        cd ../ ; break;;
+        cd ../ ;;
         # Exit Database Option
         5) break;;
         *) echo -ne "$(RedB "Ooops - unknown choice $a")"; continue;
 esac
 done
 }
-
 # Call Entry Menu Function
 entry_menu
 # End Trapping 
