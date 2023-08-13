@@ -208,15 +208,23 @@ else
                             # check column exists
                             result_inarray=$(in_array "$v" "${columns_names[@]}")
                             if [ $(check_name "$x") -eq "0" ]; then
-                                if [ "$result_inarray" -eq "0" ]; then    
+                                if [ "$result_inarray" -eq "0" ]; then
+                                    if [ "$result_inarray_delete_columns_names" -eq "1" ]; then
                                             update_columns_names_set+=("$x")
                                             break
+                                    else
+                                        echo "Wrong Input Please Try again,Did you Enter The same Name agian"
+                                        continue
                                     fi
-                            else
-                                    echo "Wrong Input Please Try again."
+                            
+                                else
+                                    echo "Wrong Input column does not exist"
                                     continue
+                                fi
+                            else
+                                echo "Wrong Input Format"
+                                continue
                             fi
-                            break
                             done
                     done
             else

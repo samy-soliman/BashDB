@@ -146,16 +146,24 @@ while true; do
                         x=$v
                         # check column exists
                         result_inarray=$(in_array "$v" "${columns_names[@]}")
-                        if [ "$result_inarray" -eq "0" ]; then
-                                if [ $(check_name "$x") -eq "0" ]; then
-                                        select_columns_names+=("$x")
-                                        break
+                        result_inarray_select_columns_names=$(in_array "$v" "${select_columns_names[@]}")
+                        if [ $(check_name "$x") -eq "0" ]; then
+                                if [ "$result_inarray" -eq "0" ]; then
+                                        if [ "$result_inarray_select_columns_names" -eq "1" ]; then
+                                                select_columns_names+=("$x")
+                                                break
+                                        else
+                                                echo "Wrong Input Please Try again,Did you Enter The same Name agian"
+                                                continue
+                                        fi
+                                else
+                                        echo "Wrong Input, Column does not exist"
+                                        continue
                                 fi
                         else
-                                echo "Wrong Input Please Try again."
+                                echo "Wrong Input Format"
                                 continue
                         fi
-                        break
                         done
                 done
         else
