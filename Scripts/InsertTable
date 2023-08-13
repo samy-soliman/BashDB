@@ -127,6 +127,8 @@ while true; do
         echo "..................SUCCESS INERTING YOUR DATA.................."
         row_value=$(IFS=":"; echo "${row[*]}")
         echo "$row_value" >> $insert_table.db
+        echo "Inserted Into Table $insert_table" >> ../$templog
+
         break
         fi
 

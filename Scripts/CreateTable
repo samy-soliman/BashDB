@@ -89,6 +89,7 @@ done
 sed -i 's/^n://' $tbn.meta
 
 echo -ne "$(GreenB 'Table Creation Success')\n" 
+echo "Created Table $tbn" >> ../$templog
 
 break
 else

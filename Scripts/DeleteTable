@@ -22,7 +22,7 @@ $(Red '3) Back TO Main Menu')
 "
 read select_option
 test_select_option=$(only_numbers "$select_option")
-if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "4" ]; then
+if [ $test_select_option -eq "0" ] && [ "$select_option" -gt "0" ] && [ "$select_option" -le "3" ]; then
         #echo "You choose $select_option"
         break 
 fi
@@ -32,6 +32,8 @@ done
 if [ $select_option -eq "1" ]; then
         rm $delete_table.db
         touch $delete_table.db
+        echo "Deleted Table $delete_table" >> ../$templog
+
 fi
 
 ############################################################################################################
@@ -54,7 +56,6 @@ column_types=($(awk -F: 'NR==2{
     }
     exit
 }' $delete_table.meta))
-fi
 
 # take the columns the user want to delete based on
 # define an array for users select columns
@@ -223,6 +224,8 @@ chosen_row=${delete_row_match[0]}
 fi
 # delete the row
 sed -i "${chosen_row}d" "$delete_table.db"
+echo "Deleted From Table $delete_table" >> ../$templog
+
 
 
 # Cleanig...
@@ -234,7 +237,7 @@ unset delete_column_number
 unset delete_column_types
 unset delete_row
 unset delete_row_match
-
+fi
 fi
 ########################################################
 ##### if user selected option3> back to main menu  #####

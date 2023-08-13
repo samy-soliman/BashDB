@@ -383,6 +383,8 @@ else
         else
             echo ".................... Success Update......................."
             sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
+            echo "Updated Table $update_table" >> ../$templog
+
         fi
         rm $temp_pk
     fi

@@ -1,14 +1,17 @@
 #! /bin/bash
 # trap signals
 trap '' 2
+
 # Import Color Functions
 source ./Utilities/ColorsFuncs
 # Import Utility Functions
 # Run the input handling function in the background
 source ./Utilities/Functions
 # Welcome message here
-echo "        ════════════════════════════════"
-echo "         ══════════════════════════════"
+echo "    ════════════════════════════════════════"
+echo "     ══════════════════════════════════════"
+echo "      ════════════════════════════════════"
+echo "       ══════════════════════════════════"
 echo " ══════════════════════════════════════════════"
 echo "  ════════════════════════════════════════════"
 echo "   ══════════════════════════════════════════"
@@ -22,11 +25,14 @@ echo "════════════════════════�
 
 # Initialization of Database
 DB_PATH="./BASHDBS"
+
 if [ ! -d "$DB_PATH" ]; then
   echo ".............Initializing Your Files,First Time!!............."
   mkdir "$DB_PATH"
 fi
-# Breif message here
+templog="templog"
+touch "$DB_PATH/$templog"
+# Breif Introduction Message Here
 echo "╔════════════════════════════════════════════════╗"
 printf "║\e[1;38;2;255;255;255m\e[48;2;128;0;128m %+30s %-15s \e[0m║\n" "Summary" 
 printf "║\e[1;38;2;0;0;0m\e[48;2;211;211;211m %-30s ║ %-13s \e[0m║\n" "DataBases" "Tables"
@@ -67,6 +73,7 @@ case $entry in
                         echo "DataBase Already Exists , Enter a new Name;"; continue
                 else
                         echo "...........Creating you DataBase ............"
+                        echo "Created Database $dbn" >> $templog
                         mkdir "$dbn"
                         break
                 fi
@@ -133,6 +140,7 @@ $(RedB 'Choose an option:')
                 else
                         echo "...........Droping Your DataBase $dbn3 ............"
                         rm -r "$dbn3"
+                        echo "Dropped Database $dbn3" >> $templog
                         break
                 fi
         done
@@ -155,17 +163,30 @@ while true; do
 done
 
 
-echo "        ════════════════════════════════"
-echo "         ══════════════════════════════"
-echo " ══════════════════════════════════════════════"
-echo "  ════════════════════════════════════════════"
-echo "   ══════════════════════════════════════════"
-cat ./Utilities/GoodBye
 echo "    ════════════════════════════════════════"
 echo "     ══════════════════════════════════════"
 echo "      ════════════════════════════════════"
 echo "       ══════════════════════════════════"
+echo " ══════════════════════════════════════════════"
+echo "  ════════════════════════════════════════════"
+echo "   ══════════════════════════════════════════"
+cat ./Utilities/GoodBye
 echo "══════════════════════════════════════════════════"
+# Breif Outro Message Here
+echo "╔════════════════════════════════════════════════╗"
+printf "║\e[1;38;2;255;255;255m\e[48;2;128;0;128m %+30s %-15s \e[0m║\n" "Summary Of Session Actions" 
+echo "╟────────────────────────────────────────────────╢"
 
+if [ -f $DB_PATH/$templog ]; then
+    # Read the file line by line using a while loop
+    while IFS= read -r line; do
+        printf "║\e[1;34;46m %-30s  %-14s \e[0m║\n" "$(basename "$line")"
+    done < "$DB_PATH/$templog"
+else
+    echo "Error finding Your logs"
+fi
+echo "╚════════════════════════════════════════════════╝"
+
+rm "$DB_PATH/$templog"
 # End Trapping 
 trap 2

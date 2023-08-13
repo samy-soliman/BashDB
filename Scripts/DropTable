@@ -14,3 +14,4 @@ done
 
 rm $drop_table.db
 rm $drop_table.meta
+echo "Droping Table $drop_table" >> ../$templog
