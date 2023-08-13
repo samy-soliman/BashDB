@@ -149,7 +149,7 @@ while true; do
     read -rsn 1 key
     case "$key" in
         [qQ]) break ;;
-        [cC]) entry_menu;;
+        [cC]) entry_menu; break;;
         *) ;;
     esac
 done
