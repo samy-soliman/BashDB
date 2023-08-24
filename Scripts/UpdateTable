@@ -198,7 +198,7 @@ else
             read user_columns_number_set
             test_columns_number=$(only_numbers "$user_columns_number_set")
             if [ $test_columns_number -eq "0" ] && [ "$user_columns_number_set" -gt "0" ] && [ "$user_columns_number_set" -le "$columns_number" ]; then
-                    for i in $(seq 1 $user_columns_number);
+                    for i in $(seq 1 $user_columns_number_set);
                     do
                             while true; do 
                             echo "Enter name from Your columns name"
@@ -207,9 +207,10 @@ else
                             x=$v
                             # check column exists
                             result_inarray=$(in_array "$v" "${columns_names[@]}")
+                            result_inarray_update_columns_names=$(in_array "$v" "${update_columns_names_set[@]}")
                             if [ $(check_name "$x") -eq "0" ]; then
                                 if [ "$result_inarray" -eq "0" ]; then
-                                    if [ "$result_inarray_delete_columns_names" -eq "1" ]; then
+                                    if [ "$result_inarray_update_columns_names" -eq "1" ]; then
                                             update_columns_names_set+=("$x")
                                             break
                                     else
@@ -345,6 +346,7 @@ else
     # now what is left is to concat the array to a string using colons
     # then replace the line in the same place we fetched it from
     updated_row_save=$(IFS=":"; echo "${row_array[*]}")
+    echo "row string update $updated_row_save"
     # but first we have to check for referencial integrity
     result_pk=$(check_common_values update_column_number_set[@] primary_columns[@])
     if [ "$result_pk" -eq 1 ]; then
@@ -380,13 +382,13 @@ else
         found_match=$(awk -v pk="$concatenated_pk" 'BEGIN { found = "NOMATCH" } $0 == pk { found = "MATCH"; exit } END { print found }' "$temp_pk")
         if [ "$found_match" == "MATCH" ]; then
             echo "ERROR Data already Exists with this primary key !!!"
-        else
-            echo ".................... Success Update......................."
-            sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table"
-            echo "Updated Table $update_table" >> ../$templog
-
         fi
         rm $temp_pk
+    else
+        echo ".................... Success Update......................."
+        sed -i "${chosen_row}s/.*/$updated_row_save/" "$update_table.db"
+        echo "Updated Table $update_table" >> ../$templog
+
     fi
 fi
 
